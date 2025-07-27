@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
 
 type Lesson = {
   id: string;
@@ -17,15 +16,20 @@ export default function HomePage() {
   const fetchLessons = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('lessons') 
-        .select('*')
-        .limit(10)
+      const response = await fetch('/lessons', {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
       
-      if (error) throw error
-      setLessons(data || [])
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      setLessons(data)
     } catch (error) {
-      console.error('Supabase error:', error)
+      console.error('Failed to fetch lessons:', error)
     } finally {
       setLoading(false)
     }
@@ -36,6 +40,7 @@ export default function HomePage() {
       <button 
         onClick={fetchLessons}
         className="bg-blue-500 text-white p-2 rounded"
+        disabled={loading}
       >
         {loading ? 'Loading...' : 'Load Lessons'}
       </button>
